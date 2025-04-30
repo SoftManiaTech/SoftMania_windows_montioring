@@ -1,0 +1,292 @@
+<form version="1.1" theme="dark">
+  <label>System Performance Metrics</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="multiselect" token="host2" searchWhenChanged="true">
+      <label>Host</label>
+      <valuePrefix>host=”</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter>OR</delimiter>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>index="windows_monitoring_nithish"|stats count by host</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="time" token="Time_Picker" searchWhenChanged="true">
+      <label>Select the Time</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <chart>
+        <title>CPU usage over time per host</title>
+        <search>
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:Cpu Load" counter="% Processor Time" 
+| timechart avg(Value) by host</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>average memory usage MB</title>
+        <search>
+          <query>index="windows_monitoring_nithish"  sourcetype="perfmon:available memory" counter="Available Bytes" 
+| eval Available_MB = Value / (1024 * 1024)
+| eval Total_RAM_MB = 8000
+| eval Used_RAM_MB = Total_RAM_MB - Available_MB
+| timechart avg(Used_RAM_MB) AS "Avg RAM Used (MB)"</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="height">225.985</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <single>
+        <title>Latest Ram usage</title>
+        <search>
+          <query>index="windows_monitoring_nithish"  sourcetype="Perfmon:Available Memory" counter="Available Bytes"
+| eval Available_MB = Value / (1024 * 1024)
+| eval Total_RAM_MB = 8000
+| eval Used_RAM_MB = Total_RAM_MB - Available_MB
+| stats latest(Used_RAM_MB) as "Current RAM Used (MB)"</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Disk Usage(Free Vs Used)</title>
+      <chart>
+        <title>Disk Usage (Free Vs Used)</title>
+        <search>
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+| search instance!="_Total"
+| stats latest(Value) as Free_Percent by instance
+| eval Free_Percent=round(Free_Percent)
+| eval Used_Percent = 100 - Free_Percent</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>free and used percentage by time</title>
+      <chart>
+        <search>
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+| search instance!="_Total" AND instance!="HarddiskVolume4" AND instance!="HarddiskVolume7" AND instance!="HarddiskVolume8" AND instance!="F:"
+| eval Used_Percent = 100 - Value
+| timechart avg(Value) AS Free_Percent, avg(Used_Percent) AS Used_Percent by instance</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">0</option>
+        <option name="trellis.size">medium</option>
+        <option name="trellis.splitBy">instance</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>free percentage of key drives</title>
+      <single>
+        <search>
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+| search instance IN ("C:","E:")
+| stats latest(Value) as Free_Percent by instance
+| eval Free_Percent = round(Free_Percent, 2)</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="height">397</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[50]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Disk I/O (Read/Write per second)</title>
+      <chart>
+        <search>
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk"
+| search counter IN ("Disk Reads/sec", "Disk Writes/sec") AND instance!="_Total"
+| timechart avg(Value) AS "I/O Rate (per sec)" by counter</query>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <drilldown>
+          <set token="host2">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+</form>
