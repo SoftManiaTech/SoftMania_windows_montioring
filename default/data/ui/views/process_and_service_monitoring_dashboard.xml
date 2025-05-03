@@ -1,11 +1,8 @@
 <form version="1.1" theme="light">
   <label>process and service monitoring</label>
   <fieldset submitButton="true">
-    <input type="multiselect" token="host2" searchWhenChanged="true">
+    <input type="multiselect" token="host" searchWhenChanged="true">
       <label>Host</label>
-      <valuePrefix>host=”</valuePrefix>
-      <valueSuffix>”</valueSuffix>
-      <delimiter>OR </delimiter>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
@@ -27,11 +24,11 @@
       <chart>
         <title>Top 5 Processes by CPU</title>
         <search>
-          <query>index="windows_monitoring_nithish"sourcetype="Perfmon:Process" counter="% Processor Time"
+          <query>index="windows_monitoring_nithish"sourcetype="Perfmon:Process" counter="% Processor Time" host=$host$
 | search NOT instance IN("Idle", "Total", "_Total")
-|stats avg(Value) as CPU_Usage by instance
-|sort -CPU_Usage
-|head 5</query>
+| stats avg(Value) as CPU_Usage by instance
+| sort -CPU_Usage
+| head 5</query>
           <earliest>$Time_Picker.earliest$</earliest>
           <latest>$Time_Picker.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -79,15 +76,15 @@
       <title>Top 5 processes by Memory</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:Process" counter="Working Set"
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:Process" counter="Working Set" host=$host$
 | where instance != "_Total"
 | eval MemoryMB=round(Value/1024/1024,2)
 | stats latest(MemoryMB) as "Memory (MB)" by instance
 | dedup instance
 | sort -"Memory (MB)"
 | head 5</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -118,6 +115,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -129,11 +127,11 @@
       <title>Total Running Services</title>
       <single>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="WinHostMon" source="service"
+          <query>index="windows_monitoring_nithish" sourcetype="WinHostMon" source="service" host=$host$
 |search State="Running"
 |stats dc(Name) as TotalRunningServices</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
+          <earliest>$Time_Picker.earliest$</earliest>
+          <latest>$Time_Picker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -142,6 +140,7 @@
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[50,100,150,200]</option>
+        <option name="refresh.display">progressbar</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
@@ -160,7 +159,7 @@
       <table>
         <search>
           <query>index="windows_monitoring_nithish" source="WinEventLog:System"
-(EventCode=6005 OR EventCode=6006 OR EventCode=6008 OR EventCode=1074)
+(EventCode=6005 OR EventCode=6006 OR EventCode=6008 OR EventCode=1074) host=$host$
 | eval Status=case(
     EventCode==6005, "System Start",
     EventCode==6006, "System Shutdown",
@@ -181,6 +180,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">false</option>
@@ -192,7 +192,7 @@
       <title>Service status changes</title>
       <viz type="event-timeline-viz.event-timeline-viz">
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:System"
+          <query>index="windows_monitoring_nithish" source="WinEventLog:System" host=$host$
 | search EventCode=6005 OR EventCode=6006 OR EventCode=6008 OR EventCode=6009 OR EventCode=1074
 | eval label=case(
     EventCode=6005, "System Start",
@@ -209,6 +209,7 @@
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>

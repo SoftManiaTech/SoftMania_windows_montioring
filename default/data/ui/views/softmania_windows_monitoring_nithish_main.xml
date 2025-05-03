@@ -1,11 +1,8 @@
 <form version="1.1" theme="dark">
   <label>System Performance Metrics</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="multiselect" token="host2" searchWhenChanged="true">
+    <input type="multiselect" token="host" searchWhenChanged="true">
       <label>Host</label>
-      <valuePrefix>host=”</valuePrefix>
-      <valueSuffix>"</valueSuffix>
-      <delimiter>OR</delimiter>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
@@ -27,7 +24,7 @@
       <chart>
         <title>CPU usage over time per host</title>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:Cpu Load" counter="% Processor Time" 
+          <query>index="windows_monitoring_nithish" host=$host$ sourcetype="Perfmon:Cpu Load" counter="% Processor Time"
 | timechart avg(Value) by host</query>
           <earliest>$Time_Picker.earliest$</earliest>
           <latest>$Time_Picker.latest$</latest>
@@ -35,6 +32,8 @@
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.visibility">visible</option>
         <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.axisY.scale">log</option>
         <option name="charting.chart">line</option>
         <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">all</option>
@@ -42,7 +41,7 @@
         <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <drilldown>
-          <set token="host2">$click.value$</set>
+          <set token="host">$click.value$</set>
         </drilldown>
       </chart>
     </panel>
@@ -52,7 +51,7 @@
       <chart>
         <title>average memory usage MB</title>
         <search>
-          <query>index="windows_monitoring_nithish"  sourcetype="perfmon:available memory" counter="Available Bytes" 
+          <query>index="windows_monitoring_nithish"  sourcetype="perfmon:available memory" counter="Available Bytes" host=$host$
 | eval Available_MB = Value / (1024 * 1024)
 | eval Total_RAM_MB = 8000
 | eval Used_RAM_MB = Total_RAM_MB - Available_MB
@@ -70,7 +69,7 @@
         <option name="height">225.985</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <set token="host2">$click.value$</set>
+          <set token="host">$click.value$</set>
         </drilldown>
       </chart>
     </panel>
@@ -78,7 +77,7 @@
       <single>
         <title>Latest Ram usage</title>
         <search>
-          <query>index="windows_monitoring_nithish"  sourcetype="Perfmon:Available Memory" counter="Available Bytes"
+          <query>index="windows_monitoring_nithish"  sourcetype="Perfmon:Available Memory" counter="Available Bytes" host=$host$
 | eval Available_MB = Value / (1024 * 1024)
 | eval Total_RAM_MB = 8000
 | eval Used_RAM_MB = Total_RAM_MB - Available_MB
@@ -103,7 +102,7 @@
       <chart>
         <title>Disk Usage (Free Vs Used)</title>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space" host=$host$
 | search instance!="_Total"
 | stats latest(Value) as Free_Percent by instance
 | eval Free_Percent=round(Free_Percent)
@@ -145,7 +144,7 @@
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
         <drilldown>
-          <set token="host2">$click.value$</set>
+          <set token="host">$click.value$</set>
         </drilldown>
       </chart>
     </panel>
@@ -155,7 +154,7 @@
       <title>free and used percentage by time</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space" host=$host$
 | search instance!="_Total" AND instance!="HarddiskVolume4" AND instance!="HarddiskVolume7" AND instance!="HarddiskVolume8" AND instance!="F:"
 | eval Used_Percent = 100 - Value
 | timechart avg(Value) AS Free_Percent, avg(Used_Percent) AS Used_Percent by instance</query>
@@ -197,7 +196,7 @@
         <option name="trellis.size">medium</option>
         <option name="trellis.splitBy">instance</option>
         <drilldown>
-          <set token="host2">$click.value$</set>
+          <set token="host">$click.value$</set>
         </drilldown>
       </chart>
     </panel>
@@ -207,7 +206,7 @@
       <title>free percentage of key drives</title>
       <single>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space"
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" counter="% Free Space" host=$host$
 | search instance IN ("C:","E:")
 | stats latest(Value) as Free_Percent by instance
 | eval Free_Percent = round(Free_Percent, 2)</query>
@@ -234,7 +233,7 @@
         <option name="useColors">1</option>
         <option name="useThousandSeparators">1</option>
         <drilldown>
-          <set token="host2">$click.value$</set>
+          <set token="host">$click.value$</set>
         </drilldown>
       </single>
     </panel>
@@ -244,7 +243,7 @@
       <title>Disk I/O (Read/Write per second)</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk"
+          <query>index="windows_monitoring_nithish" sourcetype="Perfmon:LogicalDisk" host=$host$
 | search counter IN ("Disk Reads/sec", "Disk Writes/sec") AND instance!="_Total"
 | timechart avg(Value) AS "I/O Rate (per sec)" by counter</query>
           <earliest>$Time_Picker.earliest$</earliest>

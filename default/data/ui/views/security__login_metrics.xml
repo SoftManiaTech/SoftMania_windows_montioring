@@ -1,11 +1,8 @@
 <form version="1.1" theme="light">
   <label>Security &amp; Login Metrics</label>
   <fieldset submitButton="true">
-    <input type="multiselect" token="host2" searchWhenChanged="true">
+    <input type="multiselect" token="host" searchWhenChanged="true">
       <label>Host</label>
-      <valuePrefix>host="</valuePrefix>
-      <valueSuffix>"</valueSuffix>
-      <delimiter> OR</delimiter>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
@@ -27,11 +24,12 @@
       <title>Timeline of login failures</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4625
+          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4625 host=$host$
 | rex field=Message "Account Name:\s+(?&lt;FailedUsername&gt;[^\s]+)"
 | eval FailedUsername=if(FailedUsername=="-", "Unknown User", FailedUsername)
 | timechart span=1h count by FailedUsername</query>
-          <earliest>0</earliest>
+          <earliest>$Time_picker.earliest$</earliest>
+          <latest>$Time_picker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -63,6 +61,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -74,7 +73,7 @@
       <title>Failed login attempts by username</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4625
+          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4625 host=$host$
 | rex field=Message "Account Name:\s+(?&lt;FailedUsername&gt;[^\s]+)"
 | eval FailedUsername=if(FailedUsername=="-", "Unknown User", FailedUsername)
 | stats count by FailedUsername
@@ -111,6 +110,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -122,10 +122,9 @@
       <viz type="animated_chart_viz.animated_chart_viz">
         <title>Successful logins by username and count</title>
         <search>
-          <query>index=windows_monitoring_nithish EventCode=4624
+          <query>index=windows_monitoring_nithish EventCode=4624 host=$host$
 | bin _time span=1h
-| stats count by _time, Account_Name
-| rename Account_Name as Username</query>
+| stats count by _time, Account_Name</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -148,6 +147,7 @@
         <option name="animated_chart_viz.animated_chart_viz.yAxisMin">none</option>
         <option name="animated_chart_viz.animated_chart_viz.yAxisMinCustom">100</option>
         <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">1</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -158,15 +158,17 @@
     <panel>
       <table>
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4740
+          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4740 host=$host$
 | stats count as LockedAccounts</query>
           <earliest>0</earliest>
+          <latest></latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">false</option>
@@ -178,9 +180,10 @@
       <title>Locked accounts</title>
       <single>
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4740
+          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4740 host=$host$
 | stats count as LockedAccounts</query>
           <earliest>0</earliest>
+          <latest></latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -189,6 +192,7 @@
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[0,2,5,10]</option>
+        <option name="refresh.display">progressbar</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
@@ -207,7 +211,7 @@
       <title>Logon Type Distribution</title>
       <chart>
         <search>
-          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4624
+          <query>index="windows_monitoring_nithish" source="WinEventLog:Security" EventCode=4624 host=$host$
 | stats count by Logon_Type
 | eval LogonTypeLabel=case(
     Logon_Type=2, "Interactive",
@@ -218,6 +222,7 @@
 )
 | stats sum(count) as Total by LogonTypeLabel</query>
           <earliest>0</earliest>
+          <latest></latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -248,6 +253,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
